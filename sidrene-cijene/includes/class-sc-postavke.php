@@ -30,6 +30,8 @@ class SC_Postavke {
 			'tekst_oznake'      => __( 'Sidrena cijena', 'sidrene-cijene' ),
 			'jedinica_mjere'    => 'kom',
 			'naziv_akcije'      => __( 'Akcija', 'sidrene-cijene' ),
+			'izuzete_kategorije'=> '',
+			'elementor_cijene'  => 'ne',
 			'brisi_pri_uklanjanju' => 'ne',
 		);
 	}
@@ -72,7 +74,7 @@ class SC_Postavke {
 		$ulaz  = is_array( $ulaz ) ? $ulaz : array();
 		$izlaz = self::sve();
 
-		$tekstualna = array( 'tvrtka', 'oib', 'oblik_objekta', 'adresa', 'oznaka_objekta', 'broj_pohrane', 'tekst_oznake', 'jedinica_mjere', 'naziv_akcije' );
+		$tekstualna = array( 'tvrtka', 'oib', 'oblik_objekta', 'adresa', 'oznaka_objekta', 'broj_pohrane', 'tekst_oznake', 'jedinica_mjere', 'naziv_akcije', 'izuzete_kategorije' );
 		foreach ( $tekstualna as $k ) {
 			if ( isset( $ulaz[ $k ] ) ) {
 				$izlaz[ $k ] = sanitize_text_field( wp_unslash( $ulaz[ $k ] ) );
@@ -93,7 +95,7 @@ class SC_Postavke {
 			$izlaz['dana_arhive'] = max( 1, min( 365, (int) $ulaz['dana_arhive'] ) );
 		}
 
-		foreach ( array( 'prikazi_na_shopu', 'brisi_pri_uklanjanju' ) as $k ) {
+		foreach ( array( 'prikazi_na_shopu', 'brisi_pri_uklanjanju', 'elementor_cijene' ) as $k ) {
 			if ( isset( $ulaz[ $k ] ) ) {
 				$izlaz[ $k ] = ( 'da' === $ulaz[ $k ] ) ? 'da' : 'ne';
 			}
@@ -113,6 +115,20 @@ class SC_Postavke {
 		$d = self::get( 'referentni_datum' );
 		$t = strtotime( $d );
 		return $t ? gmdate( 'd.m.Y.', $t ) : $d;
+	}
+
+	/**
+	 * Slugovi kategorija koje se izuzimaju iz cjenika proizvoda.
+	 *
+	 * @return string[]
+	 */
+	public static function izuzete_kategorije(): array {
+		$sirovo = (string) self::get( 'izuzete_kategorije' );
+		if ( '' === trim( $sirovo ) ) {
+			return array();
+		}
+		$dijelovi = array_map( 'trim', explode( ',', $sirovo ) );
+		return array_values( array_filter( array_map( 'sanitize_title', $dijelovi ) ) );
 	}
 
 	/**

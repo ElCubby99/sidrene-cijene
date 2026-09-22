@@ -328,8 +328,23 @@ class SC_Admin {
 		?>
 		<div class="card" style="max-width:none;padding:16px 20px">
 			<h2 style="margin-top:0"><?php esc_html_e( 'Objava cjenika', 'sidrene-cijene' ); ?></h2>
+			<?php $sc_javna = SC_Stranica::url(); ?>
 			<p>
-				<?php esc_html_e( 'Javna mapa:', 'sidrene-cijene' ); ?>
+				<strong><?php esc_html_e( 'Javna stranica s cjenicima:', 'sidrene-cijene' ); ?></strong><br>
+				<?php if ( $sc_javna ) : ?>
+					<a href="<?php echo esc_url( $sc_javna ); ?>" target="_blank" rel="noopener"><?php echo esc_html( $sc_javna ); ?></a>
+					<span style="color:#646970">— <?php esc_html_e( 'ovu adresu stavi kao poveznicu u podnožje stranice.', 'sidrene-cijene' ); ?></span>
+				<?php else : ?>
+					<span style="color:#d63638"><?php esc_html_e( 'Stranica još ne postoji.', 'sidrene-cijene' ); ?></span>
+					<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="display:inline">
+						<?php wp_nonce_field( 'sc_napravi_stranicu' ); ?>
+						<input type="hidden" name="action" value="sc_napravi_stranicu" />
+						<button class="button button-small"><?php esc_html_e( 'Napravi stranicu', 'sidrene-cijene' ); ?></button>
+					</form>
+				<?php endif; ?>
+			</p>
+			<p>
+				<?php esc_html_e( 'Mapa s datotekama:', 'sidrene-cijene' ); ?>
 				<code><a href="<?php echo esc_url( SC_Cjenik::url_mape() ); ?>" target="_blank" rel="noopener"><?php echo esc_html( SC_Cjenik::url_mape() ); ?></a></code>
 			</p>
 			<p>
@@ -414,6 +429,13 @@ class SC_Admin {
 				<?php
 				self::polje( 'jedinica_mjere', __( 'Zadana jedinica mjere', 'sidrene-cijene' ), $p['jedinica_mjere'] );
 				self::polje( 'naziv_akcije', __( 'Zadani naziv posebnog oblika prodaje', 'sidrene-cijene' ), $p['naziv_akcije'] );
+				self::polje(
+					'izuzete_kategorije',
+					__( 'Kategorije izuzete iz cjenika proizvoda', 'sidrene-cijene' ),
+					$p['izuzete_kategorije'],
+					__( 'Slugovi kategorija odvojeni zarezom, npr. vr-najam. Korisno kad se stavke vode kao WooCommerce proizvodi, a pravno su usluge — tada idu u cjenik usluga, ne proizvoda.', 'sidrene-cijene' )
+				);
+				self::potvrda( 'elementor_cijene', __( 'Prikazuj sidrenu cijenu u Elementor „Price Table" widgetima', 'sidrene-cijene' ), $p['elementor_cijene'] );
 				?>
 				<tr>
 					<th scope="row"><label for="sc_vrijeme"><?php esc_html_e( 'Vrijeme dnevnog osvježenja', 'sidrene-cijene' ); ?></label></th>
@@ -489,7 +511,7 @@ class SC_Admin {
 				<li><strong><?php esc_html_e( 'Klikni „Zaključaj sidrene cijene” u kartici Pregled.', 'sidrene-cijene' ); ?></strong></li>
 				<li><?php esc_html_e( 'Unesi usluge (rođendani, termini, najam) pod Usluge.', 'sidrene-cijene' ); ?></li>
 				<li><?php esc_html_e( 'Klikni „Generiraj cjenike sada” i provjeri datoteke.', 'sidrene-cijene' ); ?></li>
-				<li><?php esc_html_e( 'Objavi adresu mape s cjenicima na stranici, npr. u podnožju.', 'sidrene-cijene' ); ?></li>
+				<li><?php esc_html_e( 'Plugin je pri aktivaciji sam napravio javnu stranicu s cjenicima. Dodaj poveznicu na nju u podnožje stranice (Izgled → Izbornici).', 'sidrene-cijene' ); ?></li>
 			</ol>
 
 			<h2><?php esc_html_e( 'Što nakon promjene cijene', 'sidrene-cijene' ); ?></h2>
@@ -510,6 +532,7 @@ class SC_Admin {
 			<h2><?php esc_html_e( 'Shortcode za ručno unesene cijene', 'sidrene-cijene' ); ?></h2>
 			<p><code>[sidrena_cijena iznos="240,00"]</code> — <?php esc_html_e( 'ispisuje redak sa sidrenom cijenom uz cijenu upisanu u stranicu.', 'sidrene-cijene' ); ?></p>
 			<p><code>[sidrena_cijena id="123"]</code> — <?php esc_html_e( 'povlači sidrenu cijenu proizvoda po ID-u.', 'sidrene-cijene' ); ?></p>
+			<p><code>[sidrene_cijene_popis]</code> — <?php esc_html_e( 'ispisuje popis objavljenih cjenika s poveznicama. Stavi ga na javnu stranicu i na nju uputi link iz podnožja.', 'sidrene-cijene' ); ?></p>
 		</div>
 		<?php
 	}

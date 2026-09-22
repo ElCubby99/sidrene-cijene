@@ -17,6 +17,7 @@ class SC_Usluge {
 
 	public static function init(): void {
 		add_action( 'init', array( __CLASS__, 'registriraj_tip' ) );
+		add_action( 'init', array( __CLASS__, 'registriraj_meta' ) );
 		add_action( 'add_meta_boxes', array( __CLASS__, 'meta_kutija' ) );
 		add_action( 'save_post_' . self::TIP, array( __CLASS__, 'spremi' ), 10, 2 );
 
@@ -40,11 +41,39 @@ class SC_Usluge {
 				'public'            => false,
 				'show_ui'           => true,
 				'show_in_menu'      => false, // Prikazuje se pod izbornikom plugina.
-				'supports'          => array( 'title' ),
+				'show_in_rest'      => true,  // Omogućuje skupni unos i uređivanje izvana.
+				'rest_base'         => 'sidrene-usluge',
+				'supports'          => array( 'title', 'custom-fields' ),
 				'capability_type'   => 'post',
 				'map_meta_cap'      => true,
 			)
 		);
+	}
+
+	/** Meta polja usluge dostupna kroz REST. */
+	public static function registriraj_meta(): void {
+		$polja = array(
+			'_sc_cijena'       => __( 'Aktualna maloprodajna cijena', 'sidrene-cijene' ),
+			'_sc_sidrena'      => __( 'Sidrena cijena', 'sidrene-cijene' ),
+			'_sc_akcija'       => __( 'Poseban oblik prodaje', 'sidrene-cijene' ),
+			'_sc_naziv_akcije' => __( 'Naziv posebnog oblika prodaje', 'sidrene-cijene' ),
+		);
+		foreach ( $polja as $kljuc => $opis ) {
+			register_post_meta(
+				self::TIP,
+				$kljuc,
+				array(
+					'type'          => 'string',
+					'description'   => $opis,
+					'single'        => true,
+					'default'       => '',
+					'show_in_rest'  => true,
+					'auth_callback' => static function () {
+						return current_user_can( 'manage_woocommerce' );
+					},
+				)
+			);
+		}
 	}
 
 	public static function meta_kutija(): void {

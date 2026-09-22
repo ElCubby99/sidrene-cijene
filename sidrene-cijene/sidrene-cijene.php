@@ -3,7 +3,7 @@
  * Plugin Name:       Sidrene cijene
  * Plugin URI:        https://geekgarden.hr/
  * Description:       Isticanje sidrene (dodatne) cijene i objava cjenika u XML/CSV formatu, prema Odlukama iz NN 101/2026 koje se primjenjuju od 01.10.2026.
- * Version:           1.0.0
+ * Version:           1.1.0
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            Geek Garden d.o.o.
@@ -18,7 +18,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'SC_VERSION', '1.0.0' );
+define( 'SC_VERSION', '1.1.0' );
 define( 'SC_FILE', __FILE__ );
 define( 'SC_PATH', plugin_dir_path( __FILE__ ) );
 define( 'SC_URL', plugin_dir_url( __FILE__ ) );
@@ -34,6 +34,8 @@ require_once SC_PATH . 'includes/class-sc-zakljucavanje.php';
 require_once SC_PATH . 'includes/class-sc-usluge.php';
 require_once SC_PATH . 'includes/class-sc-cjenik.php';
 require_once SC_PATH . 'includes/class-sc-pregled.php';
+require_once SC_PATH . 'includes/class-sc-elementor.php';
+require_once SC_PATH . 'includes/class-sc-stranica.php';
 require_once SC_PATH . 'includes/class-sc-admin.php';
 
 /**
@@ -82,6 +84,8 @@ final class Sidrene_Cijene {
 		SC_Zakljucavanje::init();
 		SC_Usluge::init();
 		SC_Cjenik::init();
+		SC_Elementor::init();
+		SC_Stranica::init();
 
 		if ( is_admin() ) {
 			SC_Admin::init();
@@ -98,7 +102,14 @@ final class Sidrene_Cijene {
 	public static function aktivacija(): void {
 		SC_Cjenik::pripremi_mapu();
 		SC_Cjenik::zakazi();
-		add_option( 'sc_verzija', SC_VERSION );
+
+		// Javna stranica s poveznicama na cjenike — Odluka traži javnu dostupnost.
+		if ( ! class_exists( 'SC_Stranica' ) ) {
+			require_once SC_PATH . 'includes/class-sc-stranica.php';
+		}
+		SC_Stranica::osiguraj();
+
+		update_option( 'sc_verzija', SC_VERSION );
 	}
 
 	/** Deaktivacija: ukloni zakazane poslove. Podaci ostaju. */

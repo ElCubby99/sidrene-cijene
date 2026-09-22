@@ -34,6 +34,13 @@ foreach ( $sc_usluge as $sc_id ) {
 	wp_delete_post( $sc_id, true );
 }
 
+// Javna stranica s cjenicima.
+$sc_stranica = (int) get_option( 'sc_stranica_id', 0 );
+if ( $sc_stranica ) {
+	wp_delete_post( $sc_stranica, true );
+}
+delete_option( 'sc_stranica_id' );
+
 // Opcije.
 delete_option( 'sc_postavke' );
 delete_option( 'sc_verzija' );

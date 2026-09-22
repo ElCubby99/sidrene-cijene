@@ -45,6 +45,119 @@ class SC_Cjenik {
 	public static function init(): void {
 		add_action( self::DOGADAJ, array( __CLASS__, 'generiraj_sve' ) );
 		add_action( 'admin_post_sc_generiraj', array( __CLASS__, 'rucno_generiranje' ) );
+		add_shortcode( 'sidrene_cijene_popis', array( __CLASS__, 'shortcode_popis' ) );
+	}
+
+	/**
+	 * Javni popis objavljenih cjenika.
+	 *
+	 * Uporaba: [sidrene_cijene_popis] ili [sidrene_cijene_popis broj="20"]
+	 *
+	 * @param array $atributi Atributi shortcodea.
+	 */
+	public static function shortcode_popis( $atributi ): string {
+		$a     = shortcode_atts( array( 'broj' => 200 ), $atributi, 'sidrene_cijene_popis' );
+		$popis = self::popis( max( 1, (int) $a['broj'] ) );
+
+		if ( ! $popis ) {
+			return '<p>' . esc_html__( 'Cjenici još nisu objavljeni.', 'sidrene-cijene' ) . '</p>';
+		}
+
+		// Najnovija datoteka po kombinaciji vrsta+format je aktualna, ostalo je arhiva.
+		$aktualni = array();
+		$arhiva   = array();
+		foreach ( $popis as $d ) {
+			$meta         = self::raspoznaj( $d['naziv'] );
+			$d['vrsta']   = $meta['vrsta'];
+			$d['format']  = $meta['format'];
+			$kljuc        = $meta['vrsta'] . '|' . $meta['format'];
+
+			if ( ! isset( $aktualni[ $kljuc ] ) ) {
+				$aktualni[ $kljuc ] = $d;
+			} else {
+				$arhiva[] = $d;
+			}
+		}
+
+		$out  = '<div class="sc-popis-cjenika">';
+		$out .= '<p>' . sprintf(
+			/* translators: %s: reference date */
+			esc_html__( 'Cjenici su objavljeni u strojno čitljivom obliku (CSV i XML). Sidrena cijena je cijena koja je za pojedini proizvod ili uslugu vrijedila %s.', 'sidrene-cijene' ),
+			esc_html( SC_Postavke::datum_za_prikaz() )
+		) . '</p>';
+
+		$out .= '<h3>' . esc_html__( 'Aktualni cjenici', 'sidrene-cijene' ) . '</h3>';
+		$out .= self::tablica_datoteka( array_values( $aktualni ) );
+
+		if ( $arhiva ) {
+			$out .= '<details class="sc-arhiva"><summary>' . sprintf(
+				/* translators: 1: number of files, 2: days kept */
+				esc_html__( 'Arhiva ranije objavljenih cjenika (%1$d datoteka, čuva se %2$d dana)', 'sidrene-cijene' ),
+				count( $arhiva ),
+				(int) SC_Postavke::get( 'dana_arhive' )
+			) . '</summary>';
+			$out .= self::tablica_datoteka( $arhiva );
+			$out .= '</details>';
+		}
+
+		$out .= '</div>';
+		$out .= '<style>.sc-tablica-cjenika{width:100%;border-collapse:collapse;font-size:14px;margin:0 0 18px}'
+			. '.sc-tablica-cjenika th,.sc-tablica-cjenika td{padding:7px 10px;border-bottom:1px solid #e3e3e3;text-align:left}'
+			. '.sc-tablica-cjenika th{font-weight:600}'
+			. '.sc-popis-cjenika h3{margin:18px 0 8px}'
+			. '.sc-arhiva summary{cursor:pointer;margin:6px 0 12px;font-weight:600}</style>';
+
+		return $out;
+	}
+
+	/**
+	 * Iz naziva datoteke izvuče vrstu i format.
+	 *
+	 * @param string $naziv Naziv datoteke.
+	 * @return array{vrsta:string,format:string}
+	 */
+	private static function raspoznaj( string $naziv ): array {
+		$format = strtoupper( (string) pathinfo( $naziv, PATHINFO_EXTENSION ) );
+
+		if ( false !== stripos( $naziv, '_USLUGE_' ) ) {
+			$vrsta = __( 'Usluge', 'sidrene-cijene' );
+		} elseif ( false !== stripos( $naziv, '_PROIZVODI_' ) ) {
+			$vrsta = __( 'Proizvodi', 'sidrene-cijene' );
+		} else {
+			$vrsta = __( 'Ostalo', 'sidrene-cijene' );
+		}
+
+		return array(
+			'vrsta'  => $vrsta,
+			'format' => $format,
+		);
+	}
+
+	/**
+	 * Tablica datoteka.
+	 *
+	 * @param array $datoteke Popis datoteka.
+	 */
+	private static function tablica_datoteka( array $datoteke ): string {
+		$out = '<table class="sc-tablica-cjenika"><thead><tr>'
+			. '<th>' . esc_html__( 'Cjenik', 'sidrene-cijene' ) . '</th>'
+			. '<th>' . esc_html__( 'Format', 'sidrene-cijene' ) . '</th>'
+			. '<th>' . esc_html__( 'Objavljeno', 'sidrene-cijene' ) . '</th>'
+			. '<th>' . esc_html__( 'Datoteka', 'sidrene-cijene' ) . '</th>'
+			. '</tr></thead><tbody>';
+
+		foreach ( $datoteke as $d ) {
+			$out .= sprintf(
+				'<tr><td>%1$s</td><td>%2$s</td><td>%3$s</td><td><a href="%4$s">%5$s</a></td></tr>',
+				esc_html( $d['vrsta'] ),
+				esc_html( $d['format'] ),
+				esc_html( wp_date( 'd.m.Y. H:i', $d['vrijeme'] ) ),
+				esc_url( $d['url'] ),
+				esc_html__( 'preuzmi', 'sidrene-cijene' )
+			);
+		}
+
+		return $out . '</tbody></table>';
 	}
 
 	/* ------------------------------------------------------------ raspored */
@@ -200,12 +313,21 @@ class SC_Cjenik {
 
 		$jedinica = (string) SC_Postavke::get( 'jedinica_mjere' );
 		$naziv_akcije_zadani = (string) SC_Postavke::get( 'naziv_akcije' );
+		$izuzete  = SC_Postavke::izuzete_kategorije();
 		$redci = array();
 
 		foreach ( $idevi as $id ) {
 			$proizvod = wc_get_product( $id );
 			if ( ! $proizvod ) {
 				continue;
+			}
+
+			// Kategorije izuzete iz cjenika proizvoda (npr. najam, koji je usluga).
+			if ( $izuzete ) {
+				$kat = wp_get_post_terms( $id, 'product_cat', array( 'fields' => 'slugs' ) );
+				if ( ! is_wp_error( $kat ) && array_intersect( $izuzete, $kat ) ) {
+					continue;
+				}
 			}
 
 			// Varijabilni proizvod se u cjenik upisuje po varijacijama.

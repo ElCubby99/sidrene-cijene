@@ -5,7 +5,7 @@ Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 7.4
 WC requires at least: 7.0
-Stable tag: 1.0.0
+Stable tag: 1.1.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -28,6 +28,9 @@ Plugin pokriva obje obveze koje je Vlada RH propisala u Narodnim novinama 101/20
 * Automatski osvježava cjenik svaki dan u zadano vrijeme
 * Čuva arhivu objavljenih cjenika 30 dana i sam briše starije
 * Pregledna tablica koja pokazuje gdje nedostaje sidrena cijena ili barkod
+* Javna stranica s poveznicama na cjenike, koju plugin sam napravi pri aktivaciji
+* Prikaz sidrene cijene u Elementorovim „Price Table" widgetima, za cjenike usluga
+* Izuzimanje kategorija iz cjenika proizvoda (npr. najam, koji je pravno usluga)
 
 = Zašto je zaključavanje važno =
 
@@ -102,6 +105,15 @@ Pregled → „Poništi zaključavanje" briše sve zaključane vrijednosti.
 Deaktivacija plugina uklanja prikaz i zaustavlja zakazane poslove.
 Podaci se pri deinstalaciji brišu samo ako to uključiš u postavkama.
 
+= Gdje je javna stranica s cjenicima? =
+
+Plugin je pri aktivaciji sam stvara na adresi /cjenik-podaci/ i na nju stavlja
+shortcode `[sidrene_cijene_popis]`. Poveznicu na tu stranicu dodaj u podnožje
+(Izgled → Izbornici). Adresa je ispisana u kartici Cjenici.
+
+Ako stranica s tim slugom već postoji, plugin je posvoji umjesto da radi novu.
+Deaktivacija plugina stranicu ne dira.
+
 = Gdje završe generirani cjenici? =
 
 U `wp-content/uploads/sidrene-cijene/`. Adresa mape je ispisana u kartici
@@ -119,6 +131,14 @@ Da. Za komplete se sidrena cijena računa iz redovnih cijena stavki, jer sam
 komplet nema vlastitu redovnu cijenu.
 
 == Changelog ==
+
+= 1.1.0 =
+* Plugin pri aktivaciji sam stvara javnu stranicu s poveznicama na cjenike.
+* Stranica razdvaja aktualne cjenike od arhive, pa popis ostaje pregledan.
+* Prikaz sidrene cijene u Elementorovim „Price Table" widgetima.
+* Postavka za izuzimanje kategorija iz cjenika proizvoda.
+* Usluge dostupne kroz REST (skupni unos i uređivanje izvana).
+* Zaključavanje traži izričitu potvrdu prije upisa u bazu.
 
 = 1.0.0 =
 * Prva verzija.

@@ -35,7 +35,11 @@ Referentni datumi:
 - Generiranje **CSV i XML** po propisanoj shemi imenovanja datoteka
 - **Automatsko osvježavanje** svaki dan u zadano vrijeme (WP‑Cron)
 - **Arhiva 30 dana** s automatskim čišćenjem
+- **Javna stranica s cjenicima** koju dodatak sam napravi pri aktivaciji
+- Prikaz sidrene cijene u **Elementorovim „Price Table"** widgetima, za cjenike usluga
+- **Izuzimanje kategorija** iz cjenika proizvoda (npr. najam, koji je pravno usluga)
 - Pregledna tablica koja pokazuje gdje nedostaje sidrena cijena ili barkod
+- Usluge dostupne kroz **REST**, za skupni unos izvana
 - Čista deinstalacija; podaci se brišu samo ako to izričito uključiš
 
 ---
@@ -79,9 +83,11 @@ bash build.sh          # napravi sidrene-cijene.zip spreman za WordPress
 3. **Pregled** → potvrdi kvačicu → **Zaključaj sidrene cijene**
 4. **Usluge** → unesi usluge ako ih imaš
 5. **Cjenici** → Generiraj cjenike sada
-6. Objavi adresu mape s cjenicima na stranici, npr. u podnožju
+6. Dodaj poveznicu na javnu stranicu u podnožje (*Izgled → Izbornici*)
 
-Cjenici se spremaju u `wp-content/uploads/sidrene-cijene/`. Mapa je namjerno javno dostupna jer Odluka traži da podaci budu dohvatljivi automatiziranim alatima.
+Dodatak pri aktivaciji sam napravi javnu stranicu `/cjenik-podaci/` s popisom cjenika. Ako stranica s tim slugom već postoji, posvoji je umjesto da radi novu. Njezina adresa ispisana je u kartici **Cjenici**.
+
+Same datoteke spremaju se u `wp-content/uploads/sidrene-cijene/`. Mapa je namjerno javno dostupna jer Odluka traži da podaci budu dohvatljivi automatiziranim alatima.
 
 ---
 
@@ -100,6 +106,14 @@ Cjenici se spremaju u `wp-content/uploads/sidrene-cijene/`. Mapa je namjerno jav
 - Ne zamjenjuje obvezu isticanja **najniže cijene u prethodnih 30 dana** kod akcija, koja proizlazi iz Zakona o zaštiti potrošača i primjenjuje se istodobno
 
 ---
+
+## Shortcodeovi
+
+| Shortcode | Što radi |
+|---|---|
+| `[sidrene_cijene_popis]` | popis objavljenih cjenika — aktualni odvojeno od arhive |
+| `[sidrena_cijena iznos="240,00"]` | redak sa sidrenom cijenom uz ručno upisanu cijenu |
+| `[sidrena_cijena id="123"]` | sidrena cijena proizvoda po ID-u |
 
 ## Doprinosi
 
